@@ -1,0 +1,4 @@
+# Ignore virtual environment folders
+venv/
+# Ignore compiled Python files
+*.pyc
