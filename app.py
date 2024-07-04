@@ -72,31 +72,31 @@ def handle_question():
         return redirect(f"/questions/{len(responses)}")
 
 
-@app.route("/questions/<int:qid>")
-def show_question(qid):
-    """Display current question."""
+@app.route("/questions/<int:ques>")
+def display_question(ques):
+    """show current question."""
 
     responses = session.get(RESPONSES_KEY)
     survey_code = session[SURVEY_KEY]
     survey = surveys[survey_code]
 
     if (responses is None):
-        # trying to access question page too soon
+        
         return redirect("/")
 
     if (len(responses) == len(survey.questions)):
-        # They've answered all the questions! Thank them.
+        # if they've answered all the questions! Thank them.
         return redirect("/done-survey")
 
-    if (len(responses) != qid):
-        # Trying to access questions out of order.
-        flash(f"Invalid question id: {qid}.")
+    if (len(responses) != ques):
+        #  access questions out of order.
+        flash(f"Invalid question id: {ques}.")
         return redirect(f"/questions/{len(responses)}")
 
-    question = survey.questions[qid]
+    question = survey.questions[ques]
 
     return render_template(
-        "question.html", question_num=qid, question=question)
+        "question.html", question_num=ques, question=question)
 
 
 @app.route("/complete")
