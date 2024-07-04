@@ -19,55 +19,44 @@ debug = DebugToolbarExtension(app)
 @app.route("/")
 def select_survey_form():
     """Show a selected survey form."""
-
     return render_template("select-survey.html", surveys=surveys)
 
 
 @app.route("/", methods=["POST"])
 def choose_survey():
     """Select a survey."""
-
     survey_id = request.form['survey_code']
 
-    # take a survey step at a time
+    # check if survey is already completed
     if request.cookies.get(f"completed_{survey_id}"):
         return render_template("done-survey.html")
 
     survey = surveys[survey_id]
     session[SURVEY_KEY] = survey_id
-
     return render_template("survey.html",survey=survey)
 
 
 @app.route("/begin", methods=["POST"])
 def survey():
     """Clear the session of responses."""
-
     session[RESPONSES_KEY] = []
-
     return redirect("/questions/0")
 
 
 @app.route("/answer", methods=["POST"])
 def handle_question():
     """Save response and redirect to next question."""
-
     choice = request.form['answer']
-    text = request.form.get("text", "")
 
     # add this response to the list in the session
     responses = session[RESPONSES_KEY]
-    responses.append({"choice": choice, "text": text})
-
-    # add this response to the session
+    responses.append(choice)
     session[RESPONSES_KEY] = responses
-    survey_code = session[SURVEY_KEY]
-    survey = surveys[survey_code]
+
 
     if (len(responses) == len(survey.questions)):
-        # They've answered all the questions! Thank them.
+        # All questions answered! Thank them.
         return redirect("/complete")
-
     else:
         return redirect(f"/questions/{len(responses)}")
 
@@ -75,18 +64,20 @@ def handle_question():
 @app.route("/questions/<int:ques>")
 def display_question(ques):
     """show current question."""
-
     responses = session.get(RESPONSES_KEY)
-    survey_code = session[SURVEY_KEY]
-    survey = surveys[survey_code]
 
     if (responses is None):
-        
         return redirect("/")
+    
+    # survey_code = session[SURVEY_KEY]
+    # survey = surveys[survey_code]
 
     if (len(responses) == len(survey.questions)):
-        # if they've answered all the questions! Thank them.
         return redirect("/done-survey")
+
+    # if (len(responses) == len(survey.questions)):
+    #     # if they've answered all the questions! Thank them.
+    #     return redirect("/done-survey")
 
     if (len(responses) != ques):
         #  access questions out of order.
@@ -94,24 +85,23 @@ def display_question(ques):
         return redirect(f"/questions/{len(responses)}")
 
     question = survey.questions[ques]
-
-    return render_template(
-        "question.html", question_num=ques, question=question)
+    return render_template( "question.html", question_num=ques, question=question)
 
 
 @app.route("/complete")
 def say_thanks():
     """Thank user and list responses."""
+    return render_template("completion.html")
 
-    survey_id = session[SURVEY_KEY]
-    survey = surveys[survey_id]
-    responses = session[RESPONSES_KEY]
+    # survey_id = session[SURVEY_KEY]
+    # survey = surveys[survey_id]
+    # responses = session[RESPONSES_KEY]
 
-    html = render_template("completion.html",
-                           survey=survey,
-                           responses=responses)
+    # html = render_template("completion.html",
+    #                        survey=survey,
+    #                        responses=responses)
 
-    # Set cookie noting this survey is done so they can't re-do it
-    response = make_response(html)
-    response.set_cookie(f"completed_{survey_id}", "yes", max_age=60)
-    return response
+    # # Set cookie noting this survey is done so they can't re-do it
+    # response = make_response(html)
+    # response.set_cookie(f"completed_{survey_id}", "yes", max_age=60)
+    # return response
