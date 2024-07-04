@@ -37,7 +37,7 @@ def choose_survey():
 
 
 @app.route("/begin", methods=["POST"])
-def survey():
+def begin_survey():
     """Clear the session of responses."""
     session[RESPONSES_KEY] = []
     return redirect("/questions/0")
@@ -52,13 +52,14 @@ def handle_question():
     # add this response to the list in the session
     responses = session.get(RESPONSES_KEY, [])
     responses.append({"choice": choice, "text": text})
+    
 
     # update the session wit h the new responses
     session[RESPONSES_KEY] = responses
     survey_code = session[SURVEY_KEY]
     survey = surveys[survey_code]
 
-    if (len(responses) == len(survey.questions)):
+    if len(responses) == len(survey.questions):
         # All questions answered! Thank them.
         return redirect("/complete")
     else:
@@ -69,43 +70,41 @@ def handle_question():
 def display_question(ques):
     """show current question."""
     responses = session.get(RESPONSES_KEY)
-
     if (responses is None):
         return redirect("/")
     
-    # survey_code = session[SURVEY_KEY]
-    # survey = surveys[survey_code]
+    survey_code = session[SURVEY_KEY]
+    survey = surveys[survey_code]
 
-    if (len(responses) == len(survey.questions)):
+    if len(responses) == len(survey.questions):
         return redirect("/done-survey")
 
     # if (len(responses) == len(survey.questions)):
     #     # if they've answered all the questions! Thank them.
     #     return redirect("/done-survey")
 
-    if len(responses) != ques:
+    if (len(responses) != ques):
         #  access questions out of order.
         flash(f"Invalid question id: {ques}.")
         return redirect(f"/questions/{len(responses)}")
 
     question = survey.questions[ques]
+    
     return render_template( "question.html", question_num=ques, question=question)
 
 
 @app.route("/complete")
 def say_thanks():
     """Thank user and list responses."""
-    return render_template("completion.html")
+    survey_id = session[SURVEY_KEY]
+    survey = surveys[survey_id]
+    responses = session[RESPONSES_KEY]
 
-    # survey_id = session[SURVEY_KEY]
-    # survey = surveys[survey_id]
-    # responses = session[RESPONSES_KEY]
+    html = render_template("completion.html",survey=survey, responses=responses)
 
-    # html = render_template("completion.html",
-    #                        survey=survey,
-    #                        responses=responses)
+    # Set cookie noting this survey is done so they can't re-do it
+    response = make_response(html)
+    response.set_cookie(f"completed_{survey_id}", "yes", max_age=60)
+    return response
 
-    # # Set cookie noting this survey is done so they can't re-do it
-    # response = make_response(html)
-    # response.set_cookie(f"completed_{survey_id}", "yes", max_age=60)
-    # return response
+   
