@@ -76,12 +76,12 @@ def display_question(ques):
     survey_code = session[SURVEY_KEY]
     survey = surveys[survey_code]
 
-    if len(responses) == len(survey.questions):
+    if (len(responses) == len(survey.questions)):
         return redirect("/done-survey")
 
-    # if (len(responses) == len(survey.questions)):
-    #     # if they've answered all the questions! Thank them.
-    #     return redirect("/done-survey")
+    if (len(responses) == len(survey.questions)):
+        # if they've answered all the questions! Thank them.
+        return redirect("/done-survey")
 
     if (len(responses) != ques):
         #  access questions out of order.
