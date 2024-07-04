@@ -47,12 +47,16 @@ def survey():
 def handle_question():
     """Save response and redirect to next question."""
     choice = request.form['answer']
+    text = request.form.get("text", "")
 
     # add this response to the list in the session
-    responses = session[RESPONSES_KEY]
-    responses.append(choice)
-    session[RESPONSES_KEY] = responses
+    responses = session.get(RESPONSES_KEY, [])
+    responses.append({"choice": choice, "text": text})
 
+    # update the session wit h the new responses
+    session[RESPONSES_KEY] = responses
+    survey_code = session[SURVEY_KEY]
+    survey = surveys[survey_code]
 
     if (len(responses) == len(survey.questions)):
         # All questions answered! Thank them.
@@ -79,7 +83,7 @@ def display_question(ques):
     #     # if they've answered all the questions! Thank them.
     #     return redirect("/done-survey")
 
-    if (len(responses) != ques):
+    if len(responses) != ques:
         #  access questions out of order.
         flash(f"Invalid question id: {ques}.")
         return redirect(f"/questions/{len(responses)}")
